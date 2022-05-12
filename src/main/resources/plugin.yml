@@ -1,0 +1,8 @@
+name: PlotBorders
+author: CubBossa
+version: ${project.version}
+api-version: 1.18
+main: de.cubbossa.plotborders.PlotBorders
+
+plotwalls:
+plotborders:
