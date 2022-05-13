@@ -1,0 +1,19 @@
+# Fill this file with all required messages.
+# You can refer to every message from every file with the format: <message:[key]>.
+# E.g.: <message:prefix>.
+# Create new messages here to allow multi-language support for borders.yml and walls.yml
+
+prefix: "<gold>Plotborders</gold><gray> » </gray>"
+
+error:
+  no_permission: "<red>You don't have enough permission!</red>"
+  need_to_be_player: "<red>You have to be a player to use this command!</red>"
+  not_your_plot: "<red>This is not ýour plot. You can only modify your own plot.</red>"
+  cooldown: "<red>You have to wait <remaining> more seconds."
+
+wall_changed: "<message:prefix>Your plot wall has been changed."
+border_changed: "<message:prefix>Your plot border has been changed."
+
+gui:
+  next_page: "<gold>Next Page</gold>"
+  prev_page: "<gold>Previous Page</gold>"

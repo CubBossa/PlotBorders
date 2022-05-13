@@ -1,0 +1,7 @@
+general:
+  # If the plugin should translate messages automatically by the client locale.
+  # This requires a language.yml in the /lang/ directory for each locale.
+  use_client_locales: false
+  # The language to use if client locales are active and the clients language
+  # is not supported
+  fallback_locale: "en_US"

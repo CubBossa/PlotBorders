@@ -4,5 +4,9 @@ version: ${project.version}
 api-version: 1.18
 main: de.cubbossa.plotborders.PlotBorders
 
-plotwalls:
-plotborders:
+depend:
+  - PlotSquared
+
+commands:
+  plotwalls:
+  plotborders:

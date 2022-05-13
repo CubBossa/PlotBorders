@@ -1,0 +1,28 @@
+# The type of plot component to modify
+# Plot components: https://intellectualsites.github.io/plotsquared-documentation/customization/plot-components.html
+type: "wall"
+
+# The permission to open the gui
+open_permission: "plotborders.open.walls"
+# The cooldown in seconds to wait before the player can change this component again.
+# Use 0 to disable.
+cooldown_in_seconds: 30
+
+gui:
+  # The title. Use <message:[key]> to use messages from the language files.
+  # This allows multi-language support when used with client language.
+  title_format: "Change your Plot Walls"
+  # The rows of the gui.
+  rows: 4
+  # If the inventory should automatically add rows when there are more icons.
+  auto_scale: false
+
+# Patterns: https://intellectualsites.github.io/plotsquared-documentation/block-bucket.html
+icons:
+  stone:
+    display_material: "OAK_WOOD"
+    display_name_format: "<white><u>My Wood"
+    display_lore: "<gray>Click to apply"
+    display_lore_denied: "<red>No permission!<red>"
+    permission: "remove.this.line.if.not.required"
+    pattern: "*oak_wood"
