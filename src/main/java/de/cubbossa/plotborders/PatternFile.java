@@ -166,7 +166,7 @@ public class PatternFile {
 		return ItemStackUtils.createItemStack(
 				icon.getDisplayMaterial(),
 				TranslationHandler.getInstance().translateLine(icon.nameFormat, player),
-				TranslationHandler.getInstance().translateLines(denied ? icon.loreFormat : icon.loreFormatDenied, player)
+				TranslationHandler.getInstance().translateLines(denied ? icon.loreFormatDenied : icon.loreFormat, player)
 		);
 	}
 
@@ -176,13 +176,14 @@ public class PatternFile {
 				plugin.sendMessage((ConsoleCommandSender) commandSender, PlotBorders.NO_CONSOLE);
 				return false;
 			}
-			if (!player.hasPermission(openPermission) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
+			if (openPermission != null && !player.hasPermission(openPermission) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
 				plugin.sendMessage(player, PlotBorders.NO_PERMISSION);
 				return false;
 			}
 			long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
+			waited /= 1000;
 			if (waited <= cooldownSeconds) {
-				plugin.sendMessage(player, PlotBorders.COOLDOWN, TagResolver.resolver("seconds", Tag.inserting(Component.text(waited / 1000))));
+				plugin.sendMessage(player, PlotBorders.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
 				return false;
 			}
 			PlotPlayer<?> plotPlayer = new PlotAPI().wrapPlayer(player.getUniqueId());

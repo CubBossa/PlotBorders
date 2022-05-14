@@ -17,6 +17,8 @@ gui:
   # If the inventory should automatically add rows when there are more icons.
   auto_scale: false
 
+  success_message: "<message:wall_changed>"
+
 # Patterns: https://intellectualsites.github.io/plotsquared-documentation/block-bucket.html
 icons:
   stone:
