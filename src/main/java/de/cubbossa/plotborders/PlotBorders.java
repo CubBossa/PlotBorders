@@ -5,7 +5,6 @@ import com.plotsquared.core.plot.Plot;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.menuframework.inventory.MenuPresets;
-import de.cubbossa.menuframework.util.ItemStackUtils;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
@@ -14,6 +13,7 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Material;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -42,8 +42,10 @@ public class PlotBorders extends JavaPlugin {
 
 	public static final String PERM_WALLS = "plotborders.walls.open";
 	public static final String PERM_BORDER = "plotborders.border.open";
-	public static final String PERM_MODIFY_OTHERS = "plotborders.admin.bypass";
+	public static final String PERM_MODIFY_OTHERS = "plotborders.admin.bypass.modify";
+	public static final String PERM_BYPASS_COOLDOWN = "plotborders.admin.bypass.cooldown";
 
+	private Metrics metrics;
 
 	private BukkitAudiences audiences;
 	private final MiniMessage miniMessage = MiniMessage.miniMessage();
@@ -54,6 +56,8 @@ public class PlotBorders extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+
+		this.metrics = new Metrics(this, 15187);
 
 		this.audiences = BukkitAudiences.create(this);
 

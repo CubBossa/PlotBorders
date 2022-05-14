@@ -104,6 +104,28 @@ public class PatternFile {
 			menu.addListEntry(Button.builder()
 					.withItemStack(createIconStack(icon, player, icon.permission != null && !player.hasPermission(icon.permission)))
 					.withClickHandler(Action.LEFT, c -> {
+
+						long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
+						waited /= 1000;
+						if (waited <= cooldownSeconds && !player.hasPermission(PlotBorders.PERM_BYPASS_COOLDOWN)) {
+							plugin.sendMessage(player, PlotBorders.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
+							return;
+						}
+						if (plot == null) {
+							plugin.sendMessage(player, PlotBorders.NOT_ON_PLOT);
+							return;
+						}
+						if (plot.getConnectedPlots().size() > 1) {
+							for (final Plot plots : plot.getConnectedPlots()) {
+								if (!plots.getOwners().contains(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
+									plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
+									return;
+								}
+							}
+						} else if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
+							plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
+							return;
+						}
 						plugin.modifyPlot(plot, icon.pattern, type);
 						plugin.sendMessage(c.getPlayer(), TranslationHandler.getInstance().translateLine(successMessage, c.getPlayer()));
 						cooldowns.put(c.getPlayer().getUniqueId(), System.currentTimeMillis());
@@ -180,33 +202,12 @@ public class PatternFile {
 				plugin.sendMessage(player, PlotBorders.NO_PERMISSION);
 				return false;
 			}
-			long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
-			waited /= 1000;
-			if (waited <= cooldownSeconds) {
-				plugin.sendMessage(player, PlotBorders.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
-				return false;
-			}
 			PlotPlayer<?> plotPlayer = new PlotAPI().wrapPlayer(player.getUniqueId());
 			if (plotPlayer == null) {
 				plugin.getLogger().log(Level.SEVERE, "Player has no corresponding plot player object, please contact an administrator or report the error to the plugin author.");
 				return false;
 			}
 			Plot plot = plotPlayer.getCurrentPlot();
-			if (plot == null) {
-				plugin.sendMessage(player, PlotBorders.NOT_ON_PLOT);
-				return false;
-			}
-			if (plot.getConnectedPlots().size() > 1) {
-				for (final Plot plots : plot.getConnectedPlots()) {
-					if (!plots.getOwners().contains(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-						plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
-						return false;
-					}
-				}
-			} else if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-				plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
-				return false;
-			}
 
 			getMenu(player, plot).open(player);
 			return false;
