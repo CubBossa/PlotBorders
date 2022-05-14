@@ -1,0 +1,19 @@
+# Fill this file with all required messages.
+# You can refer to every message from every file with the format: <message:[key]>.
+# E.g.: <message:prefix>.
+# Create new messages here to allow multi-language support for borders.yml and walls.yml
+
+prefix: "<gold>Plotborders</gold><gray> » </gray>"
+
+error:
+  no_permission: "<red>Dazu besitzt du nicht die nötige Berechtigung!</red>"
+  need_to_be_player: "<red>Für diesen Befehl musst du ein Spieler sein!</red>"
+  not_your_plot: "<red>Du kannst nur deinen eigenen Plotrand verändern.</red>"
+  cooldown: "<red>Bitte warte weitere <remaining> Sekunden für diesen Befehl."
+
+wall_changed: "<message:prefix>Deine Plotwände wurden neu gesetzt."
+border_changed: "<message:prefix>Dein Plotrand wurde neu gesetzt."
+
+gui:
+  next_page: "<gold>Nächste Seite</gold>"
+  prev_page: "<gold>Vorherige Seite</gold>"
