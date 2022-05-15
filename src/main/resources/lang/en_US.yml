@@ -25,3 +25,7 @@ walls:
   no_perm: "<red>No permission!</red>"
   group: "<gray>Group: </gray>"
   click: "<gray>Click to apply</gray>"
+border:
+  no_perm: "<red>No permission!</red>"
+  group: "<gray>Group: </gray>"
+  click: "<gray>Click to apply</gray>"
