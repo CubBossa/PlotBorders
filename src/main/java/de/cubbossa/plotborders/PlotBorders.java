@@ -1,5 +1,6 @@
 package de.cubbossa.plotborders;
 
+import com.google.common.collect.Lists;
 import com.plotsquared.core.configuration.ConfigurationUtil;
 import com.plotsquared.core.plot.Plot;
 import com.sk89q.worldedit.function.pattern.Pattern;
@@ -116,6 +117,7 @@ public class PlotBorders extends JavaPlugin {
 			}
 			return false;
 		});
+		getCommand("plotbordersadmin").setTabCompleter((commandSender, command, s, strings) -> Lists.newArrayList("reload"));
 	}
 
 	@Override
