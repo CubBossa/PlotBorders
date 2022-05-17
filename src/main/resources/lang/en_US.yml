@@ -6,6 +6,7 @@
 prefix: "<gold>Plotborders</gold><gray> » </gray>"
 
 error:
+  syntax: "<red>Please use <syntax>.</red>"
   no_permission: "<red>You don't have enough permission!</red>"
   need_to_be_player: "<red>You have to be a player to use this command!</red>"
   not_your_plot: "<red>This is not your plot. You can only modify your own plot.</red>"
@@ -14,6 +15,10 @@ error:
 
 wall_changed: "<message:prefix>Your plot wall has been changed."
 border_changed: "<message:prefix>Your plot border has been changed."
+
+reload:
+  success: "<message:prefix>Successfully reloaded files."
+  failed: "<red>Error while reloading PlotBorders. See console for more information.</red>"
 
 gui:
   next_page: "<gold>Next Page</gold>"

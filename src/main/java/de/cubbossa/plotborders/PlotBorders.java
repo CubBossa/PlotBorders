@@ -5,6 +5,7 @@ import com.plotsquared.core.plot.Plot;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.menuframework.inventory.MenuPresets;
+import de.cubbossa.translations.LanguageFileException;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
@@ -12,10 +13,11 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Material;
-import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -31,6 +33,7 @@ public class PlotBorders extends JavaPlugin {
 
 	public static final Message PREFIX = new Message("prefix");
 	public static final Message NO_CONSOLE = new Message("error.need_to_be_player");
+	public static final Message WRONG_SYNTAX = new Message("error.syntax");
 	public static final Message NO_PERMISSION = new Message("error.no_permission");
 	public static final Message COOLDOWN = new Message("error.cooldown");
 	public static final Message NOT_ON_PLOT = new Message("error.not_on_plot");
@@ -39,9 +42,10 @@ public class PlotBorders extends JavaPlugin {
 	public static final Message BORDER_CHANGED = new Message("border_changed");
 	public static final Message NEXT_PAGE = new Message("gui.next_page");
 	public static final Message PREV_PAGE = new Message("gui.prev_page");
+	public static final Message RELOAD_SUCCESS = new Message("reload.success");
+	public static final Message RELOAD_FAILED = new Message("reload.failed");
 
-	public static final String PERM_WALLS = "plotborders.walls.open";
-	public static final String PERM_BORDER = "plotborders.border.open";
+	public static final String PERM_RELOAD = "plotborders.admin.reload";
 	public static final String PERM_MODIFY_OTHERS = "plotborders.admin.bypass.modify";
 	public static final String PERM_BYPASS_COOLDOWN = "plotborders.admin.bypass.cooldown";
 
@@ -67,8 +71,8 @@ public class PlotBorders extends JavaPlugin {
 		translationHandler.setFallbackLanguage(fileConfig.fallbackLocale);
 		translationHandler.setUseClientLanguage(fileConfig.usePlayerClientLocale);
 		try {
-			translationHandler.loadLanguages(Locale.US);
-		} catch (IOException e) {
+			translationHandler.loadLanguages(Locale.US, Locale.GERMANY);
+		} catch (LanguageFileException e) {
 			getLogger().log(Level.SEVERE, "Could not load languages:", e);
 		}
 
@@ -91,6 +95,27 @@ public class PlotBorders extends JavaPlugin {
 
 		getCommand("plotwalls").setExecutor(wallsFile.getCommand());
 		getCommand("plotborders").setExecutor(borderFile.getCommand());
+		getCommand("plotbordersadmin").setExecutor((commandSender, command, s, strings) -> {
+			if (!commandSender.hasPermission(PERM_RELOAD)) {
+				sendMessage(commandSender, NO_PERMISSION);
+				return false;
+			}
+			if(strings.length != 1 && !strings[0].equalsIgnoreCase("reload")) {
+				sendMessage(commandSender, WRONG_SYNTAX, TagResolver.resolver("syntax", Tag.inserting(Component.text("/plotbordersadmin reload"))));
+				return false;
+			}
+			try {
+				fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
+				translationHandler.loadLanguages(Locale.US, Locale.GERMANY);
+				wallsFile.loadFromFile(new File(getDataFolder(), "commands/walls.yml"));
+				borderFile.loadFromFile(new File(getDataFolder(), "commands/borders.yml"));
+				sendMessage(commandSender, RELOAD_SUCCESS);
+			} catch (Throwable t) {
+				sendMessage(commandSender, RELOAD_FAILED);
+				getLogger().log(Level.SEVERE, "Could not reload PlotBorders:", t);
+			}
+			return false;
+		});
 	}
 
 	@Override
@@ -104,7 +129,7 @@ public class PlotBorders extends JavaPlugin {
 		audience.sendMessage(message.asComponent(audience, resolvers));
 	}
 
-	public void sendMessage(ConsoleCommandSender sender, Message message, TagResolver... resolvers) {
+	public void sendMessage(CommandSender sender, Message message, TagResolver... resolvers) {
 		Audience audience = audiences.sender(sender);
 		audience.sendMessage(message.asComponent(audience, resolvers));
 	}

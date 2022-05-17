@@ -2,7 +2,8 @@
 # Plot components: "https://intellectualsites.github.io/plotsquared-documentation/customization/plot-components.html"
 type: "border"
 
-# The permission to open the gui
+# The permission to open the gui.
+# This exact permission is allowed for all players by default in the plugin.yml. Change it to make restrictions.
 open_permission: "plotborders.open.border"
 
 # The cooldown in seconds to wait before the player can change this component again.

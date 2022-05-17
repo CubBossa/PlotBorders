@@ -3,10 +3,44 @@ author: CubBossa
 version: ${project.version}
 api-version: 1.17
 main: de.cubbossa.plotborders.PlotBorders
+website: "https://www.spigotmc.org/resources/plotborders-for-plotsquared-v6.101978/"
 
 depend:
   - PlotSquared
 
 commands:
+  plotbordersadmin:
+    aliases: pba
   plotwalls:
+    description: changes the walls of the PlotSquaredv6 plot you currently stand on.
+    aliases: walls
   plotborders:
+    description: changes the borders of the PlotSquaredv6 plot you currently stand on.
+    aliases: border
+
+permissions:
+  plotborders.open.border:
+    default: true
+  plotborders.open.walls:
+    default: true
+  plotborders.admin:
+    default: op
+    description: All plotborders admin permissions.
+    children:
+      plotborders.admin.reload: true
+      plotborders.admin.bypass: true
+  plotborders.admin.bypass:
+    default: op
+    description: All plotborders bypass permissions.
+    children:
+      plotborders.admin.bypass.modify: true
+      plotborders.admin.bypass.cooldown: true
+  plotborders.admin.reload:
+    default: op
+    description: Reloads the walls.yml, borders.yml, config.yml and languages.
+  plotborders.admin.bypass.modify:
+    default: op
+    description: Allows you to use the plotborder and plotwalls commands on other players plots.
+  plotborders.admin.bypass.cooldown:
+    default: op
+    description: Allows you to use the plotborder and plotwalls commands before the cooldown expired.
