@@ -6,10 +6,10 @@ import com.plotsquared.core.plot.Plot;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import de.cubbossa.menuframework.GUIHandler;
 import de.cubbossa.menuframework.inventory.MenuPresets;
-import de.cubbossa.translations.LanguageFileException;
 import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
@@ -32,19 +32,6 @@ import java.util.logging.Level;
 @Getter
 public class PlotBorders extends JavaPlugin {
 
-	public static final Message PREFIX = new Message("prefix");
-	public static final Message NO_CONSOLE = new Message("error.need_to_be_player");
-	public static final Message WRONG_SYNTAX = new Message("error.syntax");
-	public static final Message NO_PERMISSION = new Message("error.no_permission");
-	public static final Message COOLDOWN = new Message("error.cooldown");
-	public static final Message NOT_ON_PLOT = new Message("error.not_on_plot");
-	public static final Message NOT_YOUR_PLOT = new Message("error.not_your_plot");
-	public static final Message WALL_CHANGED = new Message("wall_changed");
-	public static final Message BORDER_CHANGED = new Message("border_changed");
-	public static final Message NEXT_PAGE = new Message("gui.next_page");
-	public static final Message PREV_PAGE = new Message("gui.prev_page");
-	public static final Message RELOAD_SUCCESS = new Message("reload.success");
-	public static final Message RELOAD_FAILED = new Message("reload.failed");
 
 	public static final String PERM_RELOAD = "plotborders.admin.reload";
 	public static final String PERM_MODIFY_OTHERS = "plotborders.admin.bypass.modify";
@@ -59,6 +46,7 @@ public class PlotBorders extends JavaPlugin {
 	private PatternFile wallsFile;
 	private PatternFile borderFile;
 
+	@SneakyThrows
 	@Override
 	public void onEnable() {
 
@@ -68,14 +56,14 @@ public class PlotBorders extends JavaPlugin {
 
 		fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
 
+		saveResource(getDataFolder().getPath() + "lang/en_US.yml", false);
+		saveResource(getDataFolder().getPath() + "lang/de_DE.yml", false);
+
 		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"), "lang");
+		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.setFallbackLanguage(fileConfig.fallbackLocale);
 		translationHandler.setUseClientLanguage(fileConfig.usePlayerClientLocale);
-		try {
-			translationHandler.loadLanguages(Locale.US, Locale.GERMANY);
-		} catch (LanguageFileException e) {
-			getLogger().log(Level.SEVERE, "Could not load languages:", e);
-		}
+		translationHandler.loadLanguages();
 
 		new GUIHandler(this).enable();
 
@@ -98,11 +86,11 @@ public class PlotBorders extends JavaPlugin {
 		getCommand("plotborders").setExecutor(borderFile.getCommand());
 		getCommand("plotbordersadmin").setExecutor((commandSender, command, s, strings) -> {
 			if (!commandSender.hasPermission(PERM_RELOAD)) {
-				sendMessage(commandSender, NO_PERMISSION);
+				sendMessage(commandSender, Messages.NO_PERMISSION);
 				return false;
 			}
 			if(strings.length != 1 && !strings[0].equalsIgnoreCase("reload")) {
-				sendMessage(commandSender, WRONG_SYNTAX, TagResolver.resolver("syntax", Tag.inserting(Component.text("/plotbordersadmin reload"))));
+				sendMessage(commandSender, Messages.WRONG_SYNTAX, TagResolver.resolver("syntax", Tag.inserting(Component.text("/plotbordersadmin reload"))));
 				return false;
 			}
 			try {
@@ -110,9 +98,9 @@ public class PlotBorders extends JavaPlugin {
 				translationHandler.loadLanguages(Locale.US, Locale.GERMANY);
 				wallsFile.loadFromFile(new File(getDataFolder(), "commands/walls.yml"));
 				borderFile.loadFromFile(new File(getDataFolder(), "commands/borders.yml"));
-				sendMessage(commandSender, RELOAD_SUCCESS);
+				sendMessage(commandSender, Messages.RELOAD_SUCCESS);
 			} catch (Throwable t) {
-				sendMessage(commandSender, RELOAD_FAILED);
+				sendMessage(commandSender, Messages.RELOAD_FAILED);
 				getLogger().log(Level.SEVERE, "Could not reload PlotBorders:", t);
 			}
 			return false;

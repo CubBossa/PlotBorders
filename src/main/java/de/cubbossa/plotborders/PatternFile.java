@@ -76,10 +76,10 @@ public class PatternFile {
 		int row = rows - 1;
 		menu.addPreset(applier -> {
 
-			ItemStack right = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT, PlotBorders.NEXT_PAGE, null, player);
-			ItemStack left = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV, PlotBorders.PREV_PAGE, null, player);
-			ItemStack rightDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT_OFF, PlotBorders.NEXT_PAGE, null, player);
-			ItemStack leftDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV_OFF, PlotBorders.PREV_PAGE, null, player);
+			ItemStack right = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT, Messages.NEXT_PAGE, null, player);
+			ItemStack left = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV, Messages.PREV_PAGE, null, player);
+			ItemStack rightDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT_OFF, Messages.NEXT_PAGE, null, player);
+			ItemStack leftDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV_OFF, Messages.PREV_PAGE, null, player);
 
 			int leftSlot = 0;
 			int rightSlot = 1;
@@ -108,22 +108,22 @@ public class PatternFile {
 						long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
 						waited /= 1000;
 						if (waited <= cooldownSeconds && !player.hasPermission(PlotBorders.PERM_BYPASS_COOLDOWN)) {
-							plugin.sendMessage(player, PlotBorders.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
+							plugin.sendMessage(player, Messages.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
 							return;
 						}
 						if (plot == null) {
-							plugin.sendMessage(player, PlotBorders.NOT_ON_PLOT);
+							plugin.sendMessage(player, Messages.NOT_ON_PLOT);
 							return;
 						}
 						if (plot.getConnectedPlots().size() > 1) {
 							for (final Plot plots : plot.getConnectedPlots()) {
 								if (!plots.getOwners().contains(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-									plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
+									plugin.sendMessage(player, Messages.NOT_YOUR_PLOT);
 									return;
 								}
 							}
 						} else if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-							plugin.sendMessage(player, PlotBorders.NOT_YOUR_PLOT);
+							plugin.sendMessage(player, Messages.NOT_YOUR_PLOT);
 							return;
 						}
 						plugin.modifyPlot(plot, icon.pattern, type);
@@ -195,11 +195,11 @@ public class PatternFile {
 	public CommandExecutor getCommand() {
 		return (commandSender, command, s, strings) -> {
 			if (!(commandSender instanceof Player player)) {
-				plugin.sendMessage((ConsoleCommandSender) commandSender, PlotBorders.NO_CONSOLE);
+				plugin.sendMessage((ConsoleCommandSender) commandSender, Messages.NO_CONSOLE);
 				return false;
 			}
 			if (openPermission != null && !player.hasPermission(openPermission) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-				plugin.sendMessage(player, PlotBorders.NO_PERMISSION);
+				plugin.sendMessage(player, Messages.NO_PERMISSION);
 				return false;
 			}
 			PlotPlayer<?> plotPlayer = new PlotAPI().wrapPlayer(player.getUniqueId());
