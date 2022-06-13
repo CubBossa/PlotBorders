@@ -10,7 +10,6 @@ import de.cubbossa.translations.Message;
 import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -26,7 +25,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.logging.Level;
 
 @Getter
@@ -56,10 +54,10 @@ public class PlotBorders extends JavaPlugin {
 
 		fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
 
-		saveResource(getDataFolder().getPath() + "lang/en_US.yml", false);
-		saveResource(getDataFolder().getPath() + "lang/de_DE.yml", false);
+		saveResource("lang/en_US.yml", false);
+		saveResource("lang/de_DE.yml", false);
 
-		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang/"), "lang");
+		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang"));
 		translationHandler.registerAnnotatedLanguageClass(Messages.class);
 		translationHandler.setFallbackLanguage(fileConfig.fallbackLocale);
 		translationHandler.setUseClientLanguage(fileConfig.usePlayerClientLocale);
@@ -95,7 +93,7 @@ public class PlotBorders extends JavaPlugin {
 			}
 			try {
 				fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
-				translationHandler.loadLanguages(Locale.US, Locale.GERMANY);
+				translationHandler.loadLanguages();
 				wallsFile.loadFromFile(new File(getDataFolder(), "commands/walls.yml"));
 				borderFile.loadFromFile(new File(getDataFolder(), "commands/borders.yml"));
 				sendMessage(commandSender, Messages.RELOAD_SUCCESS);
@@ -115,18 +113,15 @@ public class PlotBorders extends JavaPlugin {
 	}
 
 	public void sendMessage(Player player, Message message, TagResolver... resolvers) {
-		Audience audience = audiences.player(player);
-		audience.sendMessage(message.asComponent(audience, resolvers));
+		TranslationHandler.getInstance().sendMessage(message.format(resolvers), player);
 	}
 
 	public void sendMessage(CommandSender sender, Message message, TagResolver... resolvers) {
-		Audience audience = audiences.sender(sender);
-		audience.sendMessage(message.asComponent(audience, resolvers));
+		TranslationHandler.getInstance().sendMessage(message.format(resolvers), audiences.sender(sender));
 	}
 
 	public void sendMessage(Player player, Component component) {
-		Audience audience = audiences.player(player);
-		audience.sendMessage(component);
+		audiences.player(player).sendMessage(component);
 	}
 
 	public void modifyPlot(Plot plot, String patternString, String type) {

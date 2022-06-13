@@ -127,7 +127,7 @@ public class PatternFile {
 							return;
 						}
 						plugin.modifyPlot(plot, icon.pattern, type);
-						plugin.sendMessage(c.getPlayer(), TranslationHandler.getInstance().translateLine(successMessage, c.getPlayer()));
+						TranslationHandler.getInstance().sendMessage(successMessage, c.getPlayer());
 						cooldowns.put(c.getPlayer().getUniqueId(), System.currentTimeMillis());
 						c.getMenu().close(c.getPlayer());
 					}));

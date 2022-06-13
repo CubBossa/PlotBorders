@@ -7,13 +7,30 @@ import de.cubbossa.translations.MessageMeta;
 
 @MessageFile(
 		author = "CubBossa",
-		version = "1.0",
-		languageString = "en_US",
 		header = """
-				Fill this file with all required messages.
-				You can refer to every message from every file with the format: <message:[key]>.
-				E.g.: <message:prefix>.
-				Create new messages here to allow multi-language support for borders.yml and walls.yml
+				MESSAGE FILE
+				----------------------------------------
+				Styling:
+				To style your messages, you must use the MiniMessage formatting.
+				It is a tag based styling method like html or xml and allows you to
+				create hover messages and click actions within your language file!
+
+				Example: <green>I am a green Text. <hover:show_text:"Hello there">Hover me</hover><green>
+
+				All information on how to use the formatting can be found here:
+				https://docs.adventure.kyori.net/minimessage/format.html
+
+				Additionally to the default MiniMessage, you have the following possibilities:
+				<prefix> will always be replaced with the prefix message. (general.prefix)
+				<msg:[message-key]> or <message:[message-key]> will replaced with another already interpreted messages
+				    Using <msg:color_red> and referring to a translation `color_red: <#ff0000>` will not work.
+				    The color will be interpreted as component before being inserted.
+				<col:[message-key]> will insert a message as raw MiniMessage.
+				    So instead of <msg:color_red>, you can use
+				    <col:color_red> to insert the value of color_red ("<#ff0000>") as simple string.
+				    With this functionality, you can add a style table at the top of your language file and change colors for the
+				    whole file easily.
+				----------------------------------------
 				"""
 )
 public class Messages {
