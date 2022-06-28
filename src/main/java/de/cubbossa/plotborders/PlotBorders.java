@@ -125,14 +125,17 @@ public class PlotBorders extends JavaPlugin {
 	}
 
 	public void modifyPlot(Plot plot, String patternString, String type) {
-
-		final Pattern pattern = ConfigurationUtil.BLOCK_BUCKET.parseString(patternString).toPattern();
-		if (plot.getConnectedPlots().size() > 1) {
-			for (final Plot plots : plot.getConnectedPlots()) {
-				plots.getPlotModificationManager().setComponent(type, pattern, null, null);
+		try {
+			final Pattern pattern = ConfigurationUtil.BLOCK_BUCKET.parseString(patternString).toPattern();
+			if (plot.getConnectedPlots().size() > 1) {
+				for (final Plot plots : plot.getConnectedPlots()) {
+					plots.getPlotModificationManager().setComponent(type, pattern, null, null);
+				}
+			} else {
+				plot.getPlotModificationManager().setComponent(type, pattern, null, null);
 			}
-		} else {
-			plot.getPlotModificationManager().setComponent(type, pattern, null, null);
+		} catch (Throwable t) {
+			throw new RuntimeException("Error while modifying plot with pattern '" + patternString + "'.", t);
 		}
 	}
 }
