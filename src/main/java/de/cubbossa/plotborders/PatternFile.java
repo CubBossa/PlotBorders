@@ -111,6 +111,11 @@ public class PatternFile {
 							plugin.sendMessage(player, Messages.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
 							return;
 						}
+						if(icon.permission != null && !player.hasPermission(icon.permission)) {
+							plugin.sendMessage(player, Messages.NO_PERMISSION);
+							return;
+						}
+
 						if (plot == null) {
 							plugin.sendMessage(player, Messages.NOT_ON_PLOT);
 							return;
