@@ -6,7 +6,7 @@
 
     <groupId>de.cubbossa</groupId>
     <artifactId>PlotBorders</artifactId>
-    <version>1.8</version>
+    <version>1.9</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -54,6 +54,11 @@
         <repository>
             <id>minecraft-repo</id>
             <url>https://libraries.minecraft.net/</url>
+        </repository>
+
+        <repository>
+            <id>cubbossa</id>
+            <url>https://nexus.leonardbausenwein.de/repository/maven-public/</url>
         </repository>
     </repositories>
 
@@ -148,7 +153,7 @@
         <dependency>
             <groupId>com.plotsquared</groupId>
             <artifactId>PlotSquared-Core</artifactId>
-            <version>6.9.0</version>
+            <version>6.9.4</version>
         </dependency>
 
         <dependency>
@@ -188,7 +193,6 @@
                     <artifactSet>
                         <includes>
                             <include>net.kyori:**</include>
-                            <!--<include>com.github.CubBossa.MenuFramework:MenuFramework</include>-->
                             <include>de.cubbossa:Menuframework</include>
                             <include>de.cubbossa:Translations</include>
                             <include>org.bstats</include>
