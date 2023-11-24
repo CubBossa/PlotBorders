@@ -4,27 +4,28 @@ import com.google.common.collect.Lists;
 import com.plotsquared.core.configuration.ConfigurationUtil;
 import com.plotsquared.core.plot.Plot;
 import com.sk89q.worldedit.function.pattern.Pattern;
-import de.cubbossa.menuframework.GUIHandler;
-import de.cubbossa.menuframework.inventory.MenuPresets;
 import de.cubbossa.translations.Message;
-import de.cubbossa.translations.TranslationHandler;
+import de.cubbossa.translations.Translations;
+import de.cubbossa.translations.TranslationsFramework;
+import de.cubbossa.translations.persistent.PropertiesMessageStorage;
+import de.cubbossa.translations.persistent.PropertiesStyleStorage;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 
 @Getter
@@ -38,11 +39,12 @@ public class PlotBorders extends JavaPlugin {
 	private Metrics metrics;
 
 	private BukkitAudiences audiences;
-	private final MiniMessage miniMessage = MiniMessage.miniMessage();
 	private final Config fileConfig = new Config();
 
 	private PatternFile wallsFile;
 	private PatternFile borderFile;
+	
+	private Translations translations;
 
 	@SneakyThrows
 	@Override
@@ -54,21 +56,33 @@ public class PlotBorders extends JavaPlugin {
 
 		fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
 
-		saveResource("lang/en_US.yml", false);
-		saveResource("lang/de_DE.yml", false);
+		TranslationsFramework.enable(new File(getDataFolder(), "/.."));
+		translations = TranslationsFramework.application("PlotBorders");
+		translations.setLocaleProvider(audience -> {
+			Locale fallback;
+			try {
+				fallback = Locale.forLanguageTag(fileConfig.fallbackLocale);
+			} catch (Throwable t) {
+				getLogger().log(Level.WARNING, "Could not parse locale tag '" + fileConfig.fallbackLocale + "'. Using 'en' instead.");
+				fallback = Locale.ENGLISH;
+			}
 
-		TranslationHandler translationHandler = new TranslationHandler(this, audiences, miniMessage, new File(getDataFolder(), "lang"));
-		translationHandler.registerAnnotatedLanguageClass(Messages.class);
-		translationHandler.setFallbackLanguage(fileConfig.fallbackLocale);
-		translationHandler.setUseClientLanguage(fileConfig.usePlayerClientLocale);
-		translationHandler.loadLanguages();
+			if (audience == null) {
+				return fallback;
+			}
+			if (!fileConfig.usePlayerClientLocale) {
+				return fallback;
+			}
+			return audience.getOrDefault(Identity.LOCALE, fallback);
+		});
 
-		new GUIHandler(this).enable();
-
-		MenuPresets.FILLER_DARK = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-		ItemMeta meta = MenuPresets.FILLER_DARK.getItemMeta();
-		meta.setDisplayName(" ");
-		MenuPresets.FILLER_DARK.setItemMeta(meta);
+		translations.addMessages(TranslationsFramework.messageFieldsFromClass(Messages.class));
+		translations.setMessageStorage(new PropertiesMessageStorage(getLogger(), new File(getDataFolder(), "lang")));
+		translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "lang/styles.properties")));
+		translations.loadStyles();
+		translations.saveLocale(Locale.ENGLISH);
+		translations.saveLocale(Locale.GERMAN);
+		translations.loadLocales();
 
 		wallsFile = new PatternFile(this);
 		borderFile = new PatternFile(this);
@@ -88,12 +102,16 @@ public class PlotBorders extends JavaPlugin {
 				return false;
 			}
 			if(strings.length != 1 && !strings[0].equalsIgnoreCase("reload")) {
-				sendMessage(commandSender, Messages.WRONG_SYNTAX, TagResolver.resolver("syntax", Tag.inserting(Component.text("/plotbordersadmin reload"))));
+				sendMessage(commandSender, Messages.WRONG_SYNTAX.formatted(TagResolver.resolver("syntax", Tag.inserting(Component.text("/plotbordersadmin reload")))));
 				return false;
 			}
 			try {
 				fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
-				translationHandler.loadLanguages();
+
+				translations.saveLocale(Locale.ENGLISH);
+				translations.saveLocale(Locale.GERMAN);
+				translations.loadLocales();
+
 				wallsFile.loadFromFile(new File(getDataFolder(), "commands/walls.yml"));
 				borderFile.loadFromFile(new File(getDataFolder(), "commands/borders.yml"));
 				sendMessage(commandSender, Messages.RELOAD_SUCCESS);
@@ -108,16 +126,15 @@ public class PlotBorders extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-
-		GUIHandler.getInstance().disable();
 	}
 
-	public void sendMessage(Player player, Message message, TagResolver... resolvers) {
-		TranslationHandler.getInstance().sendMessage(message.format(resolvers), player);
-	}
-
-	public void sendMessage(CommandSender sender, Message message, TagResolver... resolvers) {
-		TranslationHandler.getInstance().sendMessage(message.format(resolvers), audiences.sender(sender));
+	public void sendMessage(CommandSender sender, ComponentLike message) {
+		Audience audience = audiences.sender(sender);
+		ComponentLike resolved = message;
+		if (message instanceof Message msg) {
+			resolved = msg.asComponent(audience);
+		}
+		audience.sendMessage(resolved);
 	}
 
 	public void sendMessage(Player player, Component component) {

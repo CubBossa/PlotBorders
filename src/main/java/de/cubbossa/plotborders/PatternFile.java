@@ -1,15 +1,11 @@
 package de.cubbossa.plotborders;
 
+import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
+import com.github.stefvanschie.inventoryframework.gui.GuiItem;
+import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import com.plotsquared.core.PlotAPI;
 import com.plotsquared.core.player.PlotPlayer;
 import com.plotsquared.core.plot.Plot;
-import de.cubbossa.menuframework.inventory.Action;
-import de.cubbossa.menuframework.inventory.Button;
-import de.cubbossa.menuframework.inventory.MenuPresets;
-import de.cubbossa.menuframework.inventory.TopMenu;
-import de.cubbossa.menuframework.inventory.implementations.ListMenu;
-import de.cubbossa.menuframework.util.ItemStackUtils;
-import de.cubbossa.translations.TranslationHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -18,7 +14,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -27,11 +22,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Getter
@@ -50,7 +43,7 @@ public class PatternFile {
 		private final String pattern;
 	}
 
-	private final PlotBorders plugin;
+	private final PlotBorders plotBorders;
 
 	private String type;
 	private @Nullable String openPermission;
@@ -65,84 +58,70 @@ public class PatternFile {
 
 	private final HashMap<UUID, Long> cooldowns = new HashMap<>();
 
-	public TopMenu getMenu(Player player, Plot plot) {
+	public Gui getMenu(Player player, Plot plot) {
 		int rows = this.rows;
 		if (autoScale) {
 			rows = Integer.max(2, Integer.min(6, (icons.size() + 8) / 9));
 		}
 
-		ListMenu menu = new ListMenu(TranslationHandler.getInstance().translateLine(titleFormat, player), rows);
-		menu.addPreset(MenuPresets.fillRow(MenuPresets.FILLER_DARK, rows - 1));
-		int row = rows - 1;
-		menu.addPreset(applier -> {
-
-			ItemStack right = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT, Messages.NEXT_PAGE, null, player);
-			ItemStack left = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV, Messages.PREV_PAGE, null, player);
-			ItemStack rightDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_NEXT_OFF, Messages.NEXT_PAGE, null, player);
-			ItemStack leftDisabled = Util.createCustomHead(Util.HEAD_URL_ARROW_PREV_OFF, Messages.PREV_PAGE, null, player);
-
-			int leftSlot = 0;
-			int rightSlot = 1;
-
-			boolean leftLimit = applier.getMenu().getCurrentPage() <= applier.getMenu().getMinPage();
-			boolean rightLimit = applier.getMenu().getCurrentPage() >= applier.getMenu().getMaxPage();
-
-			if (leftLimit) {
-				applier.addItemOnTop(row * 9 + leftSlot, leftDisabled);
-			} else {
-				applier.addItemOnTop(row * 9 + leftSlot, left);
-				applier.addClickHandlerOnTop(row * 9 + leftSlot, Action.LEFT, c -> applier.getMenu().setPreviousPage(c.getPlayer()));
+		return new ListGUI<Icon>(rows, ComponentHolder.of(plotBorders.getTranslations().process(titleFormat))) {
+			@Override
+			public List<Icon> getElementSection(int begin, int end) {
+				return icons.subList(Math.max(0, begin), Math.min(icons.size(), end));
 			}
-			if (rightLimit) {
-				applier.addItemOnTop(row * 9 + rightSlot, rightDisabled);
-			} else {
-				applier.addItemOnTop(row * 9 + rightSlot, right);
-				applier.addClickHandlerOnTop(row * 9 + rightSlot, Action.LEFT, c -> applier.getMenu().setNextPage(c.getPlayer()));
+
+			@Override
+			public int getElementCount() {
+				return icons.size();
 			}
-		});
-		for (Icon icon : icons) {
-			menu.addListEntry(Button.builder()
-					.withItemStack(createIconStack(icon, player, icon.permission != null && !player.hasPermission(icon.permission)))
-					.withClickHandler(Action.LEFT, c -> {
 
-						long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
-						waited /= 1000;
-						if (waited <= cooldownSeconds && !player.hasPermission(PlotBorders.PERM_BYPASS_COOLDOWN)) {
-							plugin.sendMessage(player, Messages.COOLDOWN, TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited))));
-							return;
-						}
-						if(icon.permission != null && !player.hasPermission(icon.permission)) {
-							plugin.sendMessage(player, Messages.NO_PERMISSION);
-							return;
-						}
+			@Override
+			public GuiItem render(Icon icon) {
+				GuiItem item = new GuiItem(createIconStack(icon, icon.permission != null && !player.hasPermission(icon.permission)));
+				item.setAction(e -> {
+					e.setCancelled(true);
+					if (!e.isLeftClick()) {
+						return;
+					}
+					long waited = System.currentTimeMillis() - cooldowns.getOrDefault(player.getUniqueId(), 0L);
+					waited /= 1000;
+					if (waited <= cooldownSeconds && !player.hasPermission(PlotBorders.PERM_BYPASS_COOLDOWN)) {
+						plotBorders.sendMessage(player, Messages.COOLDOWN.formatted(TagResolver.resolver("remaining", Tag.inserting(Component.text(cooldownSeconds - waited)))));
+						return;
+					}
+					if(icon.permission != null && !player.hasPermission(icon.permission)) {
+						plotBorders.sendMessage(player, Messages.NO_PERMISSION);
+						return;
+					}
 
-						if (plot == null) {
-							plugin.sendMessage(player, Messages.NOT_ON_PLOT);
-							return;
-						}
-						if (plot.getConnectedPlots().size() > 1) {
-							for (final Plot plots : plot.getConnectedPlots()) {
-								if (!plots.getOwners().contains(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-									plugin.sendMessage(player, Messages.NOT_YOUR_PLOT);
-									return;
-								}
+					if (plot == null) {
+						plotBorders.sendMessage(player, Messages.NOT_ON_PLOT);
+						return;
+					}
+					if (plot.getConnectedPlots().size() > 1) {
+						for (final Plot plots : plot.getConnectedPlots()) {
+							if (!plots.getOwners().contains(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
+								plotBorders.sendMessage(player, Messages.NOT_YOUR_PLOT);
+								return;
 							}
-						} else if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-							plugin.sendMessage(player, Messages.NOT_YOUR_PLOT);
-							return;
 						}
-						plugin.modifyPlot(plot, icon.pattern, type);
-						TranslationHandler.getInstance().sendMessage(successMessage, c.getPlayer());
-						cooldowns.put(c.getPlayer().getUniqueId(), System.currentTimeMillis());
-						c.getMenu().close(c.getPlayer());
-					}));
-		}
-		return menu;
+					} else if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
+						plotBorders.sendMessage(player, Messages.NOT_YOUR_PLOT);
+						return;
+					}
+					plotBorders.modifyPlot(plot, icon.pattern, type);
+					plotBorders.sendMessage(player, plotBorders.getTranslations().process(successMessage));
+					cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+					player.closeInventory();
+				});
+				return item;
+			}
+		};
 	}
 
 	public void loadFromFile(File file) throws IOException {
 		if (!file.exists()) {
-			plugin.saveResource(file.getAbsolutePath().replace(plugin.getDataFolder().getAbsolutePath(), "").substring(1), true);
+			plotBorders.saveResource(file.getAbsolutePath().replace(plotBorders.getDataFolder().getAbsolutePath(), "").substring(1), true);
 			file = new File(file.getAbsolutePath());
 		}
 		if (file == null || !file.exists()) {
@@ -156,7 +135,7 @@ public class PatternFile {
 		cooldownSeconds = cfg.getInt("cooldown_in_seconds", 30);
 
 		titleFormat = cfg.getString("gui.title_format", "<red>Unnamed</red>");
-		successMessage = cfg.getString("gui.success_message", "<message:wall_changed>");
+		successMessage = cfg.getString("gui.success_message", "<msg:wall_changed>");
 
 		rows = cfg.getInt("gui.rows", 4);
 		autoScale = cfg.getBoolean("gui.auto_scale", false);
@@ -169,16 +148,16 @@ public class PatternFile {
 		for (String key : iconsSection.getKeys(false)) {
 			ConfigurationSection s = iconsSection.getConfigurationSection(key);
 			if (s == null) {
-				plugin.getLogger().log(Level.SEVERE, "Invalid Configurationsection: " + key);
+				plotBorders.getLogger().log(Level.SEVERE, "Invalid Configurationsection: " + key);
 				continue;
 			}
 			Material material = null;
 			try {
-				material = Material.valueOf(s.getString("display_material", "STONE"));
+				material = Material.valueOf(s.getString("display_material", "STONE").toUpperCase());
 			} catch (IllegalArgumentException ignored) {
 			}
 			if (material == null) {
-				plugin.getLogger().log(Level.SEVERE, "Could not find material: " + s.getString("display_material"));
+				plotBorders.getLogger().log(Level.SEVERE, "Could not find material: " + s.getString("display_material"));
 				continue;
 			}
 			String displayNameFormat = s.getString("display_name_format", "<gray><lang:block.minecraft.stone>");
@@ -189,32 +168,36 @@ public class PatternFile {
 		}
 	}
 
-	private ItemStack createIconStack(Icon icon, Player player, boolean denied) {
-		return ItemStackUtils.createItemStack(
+	private ItemStack createIconStack(Icon icon, boolean denied) {
+		return Util.createItemStack(
 				icon.getDisplayMaterial(),
-				TranslationHandler.getInstance().translateLine(icon.nameFormat, player),
-				TranslationHandler.getInstance().translateLines(denied ? icon.loreFormatDenied : icon.loreFormat, player)
+				plotBorders.getTranslations().process(icon.nameFormat),
+				Arrays.stream((denied ? icon.loreFormatDenied : icon.loreFormat).split("\n"))
+						.map(s -> plotBorders.getTranslations().process(s))
+						.collect(Collectors.toList())
 		);
 	}
 
 	public CommandExecutor getCommand() {
 		return (commandSender, command, s, strings) -> {
 			if (!(commandSender instanceof Player player)) {
-				plugin.sendMessage((ConsoleCommandSender) commandSender, Messages.NO_CONSOLE);
+				plotBorders.sendMessage(commandSender, Messages.NO_CONSOLE);
 				return false;
 			}
 			if (openPermission != null && !player.hasPermission(openPermission) && !player.hasPermission(PlotBorders.PERM_MODIFY_OTHERS)) {
-				plugin.sendMessage(player, Messages.NO_PERMISSION);
+				plotBorders.sendMessage(player, Messages.NO_PERMISSION);
 				return false;
 			}
 			PlotPlayer<?> plotPlayer = new PlotAPI().wrapPlayer(player.getUniqueId());
 			if (plotPlayer == null) {
-				plugin.getLogger().log(Level.SEVERE, "Player has no corresponding plot player object, please contact an administrator or report the error to the plugin author.");
+				plotBorders.getLogger().log(Level.SEVERE, "Player has no corresponding plot player object, please contact an administrator or report the error to the plugin author.");
 				return false;
 			}
 			Plot plot = plotPlayer.getCurrentPlot();
 
-			getMenu(player, plot).open(player);
+			var gui = getMenu(player, plot);
+			gui.show(player);
+			gui.update();
 			return false;
 		};
 	}
