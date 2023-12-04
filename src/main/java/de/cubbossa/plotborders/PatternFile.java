@@ -22,9 +22,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Getter
@@ -172,9 +174,7 @@ public class PatternFile {
 		return Util.createItemStack(
 				icon.getDisplayMaterial(),
 				plotBorders.getTranslations().process(icon.nameFormat),
-				Arrays.stream((denied ? icon.loreFormatDenied : icon.loreFormat).split("\n"))
-						.map(s -> plotBorders.getTranslations().process(s))
-						.collect(Collectors.toList())
+				plotBorders.getTranslations().process(denied ? icon.loreFormatDenied : icon.loreFormat)
 		);
 	}
 

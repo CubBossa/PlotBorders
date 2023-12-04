@@ -77,8 +77,9 @@ public class PlotBorders extends JavaPlugin {
 		});
 
 		translations.addMessages(TranslationsFramework.messageFieldsFromClass(Messages.class));
-		translations.setMessageStorage(new PropertiesMessageStorage(getLogger(), new File(getDataFolder(), "lang")));
+		translations.setMessageStorage(new PropertiesMessageStorage(new File(getDataFolder(), "lang")));
 		translations.setStyleStorage(new PropertiesStyleStorage(new File(getDataFolder(), "lang/styles.properties")));
+
 		translations.loadStyles();
 		translations.saveLocale(Locale.ENGLISH);
 		translations.saveLocale(Locale.GERMAN);
@@ -108,6 +109,7 @@ public class PlotBorders extends JavaPlugin {
 			try {
 				fileConfig.reload(this, new File(getDataFolder(), "config.yml"));
 
+				translations.loadStyles();
 				translations.saveLocale(Locale.ENGLISH);
 				translations.saveLocale(Locale.GERMAN);
 				translations.loadLocales();
@@ -130,11 +132,10 @@ public class PlotBorders extends JavaPlugin {
 
 	public void sendMessage(CommandSender sender, ComponentLike message) {
 		Audience audience = audiences.sender(sender);
-		ComponentLike resolved = message;
 		if (message instanceof Message msg) {
-			resolved = msg.asComponent(audience);
+			message = msg.formatted(audience);
 		}
-		audience.sendMessage(resolved);
+		audience.sendMessage(message);
 	}
 
 	public void sendMessage(Player player, Component component) {
