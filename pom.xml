@@ -6,7 +6,7 @@
 
     <groupId>de.cubbossa</groupId>
     <artifactId>PlotBorders</artifactId>
-    <version>1.11</version>
+    <version>1.12</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>de.cubbossa</groupId>
             <artifactId>Translations</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.0</version>
         </dependency>
 
         <dependency>
